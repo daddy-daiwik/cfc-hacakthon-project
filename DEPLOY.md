@@ -2,13 +2,11 @@
 
 Since **VoiceRoom** uses **Socket.IO** (WebSockets) and **In-Memory Storage** (for active rooms), it requires a backend hosting provider that supports long-running processes. Standard "Serverless" platforms (like Vercel's backend hosting) will **NOT** work for the server because they kill the connection after a few seconds.
 
-We recommend a **Split Deployment**:
-1.  **Frontend (Client)** -> Deployed on **Vercel** (Free & Fast)
-2.  **Backend (Server)** -> Deployed on **Render** (Free & Supports WebSockets)
+We recommend a **Split Deployment** (Frontend on Vercel, Backend on Render or Railway):
 
 ---
 
-## Part 1: Deploy Backend to Render
+## Option 1: Deploy Backend to Render (Free Tier Available)
 
 1.  Push your latest code to GitHub (you just did this!).
 2.  Go to [Render.com](https://render.com) and create a free account.
@@ -20,10 +18,32 @@ We recommend a **Split Deployment**:
     *   **Start Command**: `node index.js`
     *   **Instance Type**: Free
 6.  **Environment Variables** (Add these in the "Environment" tab):
-    *   `MONGODB_URI`: Your MongoDB connection string (from MongoDB Atlas).
-    *   `PORT`: `3001` (or let Render handle it, usually they set a `PORT` var).
+    *   `MONGODB_URI`: Your MongoDB connection string.
+    *   `PORT`: `3001` (or let Render handle it).
 7.  Click **"Create Web Service"**.
-8.  **Copy the URL**: Once deployed, Render will give you a URL like `https://voiceroom-server.onrender.com`. Copy this!
+8.  **Copy the URL**: (e.g., `https://voiceroom-server.onrender.com`).
+
+---
+
+## Option 2: Deploy Backend to Railway (Recommended for Ease of Use)
+
+1.  Go to [Railway.app](https://railway.app) and login with GitHub.
+2.  Click **"New Project"** -> **"Deploy from GitHub repo"**.
+3.  Select your repo (`voiceroom-app`).
+4.  **Configure**:
+    *   Click on the new service card -> **Settings**.
+    *   **Root Directory**: `server`
+    *   **Build Command**: `npm install`
+    *   **Start Command**: `node index.js`
+5.  **Variables**:
+    *   Go to **Variables** tab.
+    *   Add `MONGODB_URI` (your database URL).
+    *   Add `PORT` = `3001` (or verify Railway's assigned port variable).
+6.  **Public URL**:
+    *   Go to **Settings** -> **Networking** -> **Generate Domain**.
+    *   Copy this URL (e.g., `https://voiceroom-production.up.railway.app`).
+
+---
 
 ---
 
