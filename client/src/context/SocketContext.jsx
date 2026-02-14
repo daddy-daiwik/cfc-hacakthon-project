@@ -29,7 +29,7 @@ export function SocketProvider({ children }) {
         const newSocket = io(SERVER_URL, {
             auth: { token },
             path: '/socket.io', // Explicitly match server config
-            transports: ['websocket', 'polling'],
+            transports: ['polling', 'websocket'], // Try polling first for stability
             withCredentials: true,
             reconnection: true,
             reconnectionAttempts: 5,
