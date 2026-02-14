@@ -1,0 +1,11 @@
+.tag-filter {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 0;
+    scrollbar-width: none;
+}
+
+.tag-filter::-webkit-scrollbar {
+    display: none;
+}
