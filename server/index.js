@@ -102,7 +102,7 @@ const peerServer = ExpressPeerServer(server, {
     allow_discovery: true,
 });
 
-app.use('/peerjs', peerServer);
+app.use(peerServer);
 
 // ─── Start Main Server ──────────────────────────────────
 const PORT = process.env.PORT || 3001;
