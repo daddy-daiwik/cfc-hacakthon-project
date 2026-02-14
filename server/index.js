@@ -71,9 +71,10 @@ app.get('/api/tags', (req, res) => {
 });
 
 // ─── Socket.IO ──────────────────────────────────────────
+// ─── Socket.IO ──────────────────────────────────────────
 const io = new Server(server, {
     cors: corsOptions,
-    path: '/socket.io' // Explicitly set path
+    path: '/voiceroom-socket' // Custom path to avoid conflict
 });
 
 // Socket auth middleware
@@ -93,9 +94,11 @@ io.use((socket, next) => {
 setupSocketHandlers(io);
 
 // ─── PeerJS on Main Server ──────────────────────────────
+// Use a dummy server object to prevent auto-binding the 'upgrade' event
+// We will manually handle the upgrade
 const peerServer = ExpressPeerServer(server, {
     debug: true,
-    path: '/peerjs', // CHANGED: Restrict WS upgrade to /peerjs path only
+    path: '/peerjs', 
     allow_discovery: true,
 });
 
@@ -105,7 +108,7 @@ app.use('/peerjs', peerServer);
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
     console.log(`🎙️  VoiceRoom server running on http://localhost:${PORT}`);
-    console.log(`🔌 Socket.IO ready at /socket.io`);
+    console.log(`🔌 Socket.IO ready at /voiceroom-socket`);
     console.log(`📡 PeerJS ready at /peerjs`);
 });
 
