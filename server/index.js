@@ -95,7 +95,7 @@ setupSocketHandlers(io);
 // ─── PeerJS on Main Server ──────────────────────────────
 const peerServer = ExpressPeerServer(server, {
     debug: true,
-    path: '/',
+    path: '/peerjs', // CHANGED: Restrict WS upgrade to /peerjs path only
     allow_discovery: true,
 });
 
