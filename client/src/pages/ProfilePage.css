@@ -49,14 +49,7 @@
     gap: 10px;
 }
 
-.pro-badge {
-    background: var(--warning);
-    color: white;
-    font-size: 0.8rem;
-    padding: 2px 8px;
-    border-radius: 4px;
-    vertical-align: middle;
-}
+
 
 .profile-stats {
     display: flex;
@@ -72,36 +65,7 @@
     white-space: pre-wrap;
 }
 
-.subscription-section {
-    margin-top: 40px;
-    padding-top: 30px;
-    border-top: 1px solid var(--border);
-}
 
-.tier-card {
-    background: var(--bg-tertiary);
-    padding: 20px;
-    border-radius: var(--radius-lg);
-    margin-top: 15px;
-    border: 2px solid transparent;
-}
-
-.tier-card.pro-active {
-    border-color: var(--accent-purple);
-    background: rgba(124, 58, 237, 0.05);
-}
-
-.tier-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.status-active {
-    color: var(--accent-green);
-    font-weight: bold;
-}
 
 .animate-slide-up {
     animation: slideUp 0.4s ease-out;

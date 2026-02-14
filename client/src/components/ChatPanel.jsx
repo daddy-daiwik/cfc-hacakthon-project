@@ -43,6 +43,9 @@ export default function ChatPanel({ messages, onSend, isOpen, onToggle }) {
                             >
                                 <span className="chat-username">{msg.username}</span>
                                 <span className="chat-text">{msg.text}</span>
+                                <span className="chat-time" style={{ fontSize: '0.65rem', color: 'var(--text-muted)', alignSelf: 'flex-end', marginTop: '2px' }}>
+                                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
                             </div>
                         ))}
                         <div ref={messagesEndRef} />

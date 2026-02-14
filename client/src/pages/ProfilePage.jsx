@@ -6,7 +6,7 @@ import './ProfilePage.css';
 
 export default function ProfilePage() {
     const { username } = useParams();
-    const { user: currentUser } = useAuth();
+    const { user: currentUser, token } = useAuth();
     const navigate = useNavigate();
 
     const [profile, setProfile] = useState(null);
@@ -44,7 +44,6 @@ export default function ProfilePage() {
     const handleSave = async () => {
         try {
             const apiBase = `http://${window.location.hostname}:3001`;
-            const token = localStorage.getItem('token');
             const res = await fetch(`${apiBase}/api/users/profile`, {
                 method: 'PUT',
                 headers: {
@@ -99,7 +98,6 @@ export default function ProfilePage() {
                         <div className="profile-info">
                             <h1 className="profile-name">
                                 {profile.username}
-                                {profile.isPro && <span className="pro-badge">PRO</span>}
                             </h1>
                             <div className="profile-stats">
                                 <span><strong>{profile.followers?.length || 0}</strong> Followers</span>
@@ -145,22 +143,6 @@ export default function ProfilePage() {
                         )}
                     </div>
 
-                    {/* Subscription Section (Mock) */}
-                    <div className="subscription-section">
-                        <h3>Subscription Tier</h3>
-                        <div className={`tier-card ${profile.isPro ? 'pro-active' : ''}`}>
-                            <div className="tier-header">
-                                <h4>VoiceRoom PRO</h4>
-                                {profile.isPro ? <span className="status-active">Active</span> : null}
-                            </div>
-                            <p>Unlock exclusive features, badges, and higher audio quality.</p>
-                            {!profile.isPro && isOwnProfile && (
-                                <button className="btn btn-primary" onClick={() => alert('Payment flow would open here!')}>
-                                    Upgrade to PRO
-                                </button>
-                            )}
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

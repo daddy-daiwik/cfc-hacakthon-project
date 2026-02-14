@@ -77,13 +77,13 @@
     white-space: nowrap;
 }
 
-.host-controls {
+.pc-host-controls {
     display: flex;
     gap: 4px;
     opacity: 0;
     transition: opacity 0.2s;
 }
 
-.participant-circle:hover .host-controls {
+.participant-circle:hover .pc-host-controls {
     opacity: 1;
 }

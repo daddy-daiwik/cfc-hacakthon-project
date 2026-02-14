@@ -20,11 +20,11 @@ const corsOptions = {
     origin: function (origin, callback) {
         callback(null, true);
     },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
 };
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use('/api/users', userRoutes);
 
 // Request logging
 app.use((req, res, next) => {
@@ -37,6 +37,8 @@ app.get('/', (req, res) => {
 });
 
 // ─── REST Auth Routes ───────────────────────────────────
+app.use('/api/users', userRoutes);
+
 app.post('/api/auth/signup', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -106,6 +108,15 @@ const peerServer = ExpressPeerServer(peerServerHttp, {
 });
 peerApp.use(cors(corsOptions));
 peerApp.use('/peerjs', peerServer);
+
+// ─── Error Handling ─────────────────────────────────────
+process.on('uncaughtException', (err) => {
+    console.error('❌ Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 const PEER_PORT = 3002;
 peerServerHttp.listen(PEER_PORT, () => {

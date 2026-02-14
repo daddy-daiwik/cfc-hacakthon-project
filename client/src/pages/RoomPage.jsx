@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import { useRoom } from '../hooks/useRoom';
@@ -12,13 +12,14 @@ import './RoomPage.css';
 
 export default function RoomPage() {
     const { roomId } = useParams();
+    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { socket } = useSocket();
     const { user } = useAuth();
     const [joined, setJoined] = useState(false);
     const [chatOpen, setChatOpen] = useState(false);
     const [error, setError] = useState('');
-    const [accessCode, setAccessCode] = useState('');
+    const [accessCode, setAccessCode] = useState(searchParams.get('code') || '');
 
     const {
         room, participants, messages, isHost, ended, kicked,
@@ -27,7 +28,7 @@ export default function RoomPage() {
         muteAll, setSpeakersAllowed,
     } = useRoom(roomId);
 
-    const { remoteStreams, isMuted, toggleMute, forceMute, error: rtcError } = useWebRTC(roomId, joined);
+    const { remoteStreams, isMuted, toggleMute, forceMute, forceUnmute, error: rtcError } = useWebRTC(roomId, joined);
 
     const joinRoom = (code = null) => {
         if (!socket || !roomId) return;
@@ -44,7 +45,8 @@ export default function RoomPage() {
     // Join room on mount
     useEffect(() => {
         if (joined) return;
-        joinRoom();
+        // Default to state value (from URL param) if 'code' arg is not passed explicitly to joinRoom
+        joinRoom(accessCode);
     }, [socket, roomId]);
 
     // Handle room ended
@@ -95,16 +97,31 @@ export default function RoomPage() {
     }, [remoteStreams]);
 
     // Listen for forced mute from host
+    // Listen for forced mute/unmute from host
     useEffect(() => {
         if (!socket) return;
+        
         const onMuted = ({ userId: mutedId }) => {
             if (mutedId === user?.id) {
                 forceMute();
             }
         };
+
+        const onUnmuted = ({ userId: unmutedId }) => {
+            if (unmutedId === user?.id) {
+                // Host unmuted us, so we force unmute locally
+                forceUnmute();
+            }
+        };
+
         socket.on('mod:user-muted', onMuted);
-        return () => socket.off('mod:user-muted', onMuted);
-    }, [socket, user?.id, forceMute]);
+        socket.on('mod:user-unmuted', onUnmuted);
+        
+        return () => {
+            socket.off('mod:user-muted', onMuted);
+            socket.off('mod:user-unmuted', onUnmuted);
+        };
+    }, [socket, user?.id, forceMute, forceUnmute]);
 
     const currentParticipant = participants.find(p => p.id === user?.id);
     const hasRaisedHand = currentParticipant?.hasRaisedHand || false;
@@ -198,6 +215,18 @@ export default function RoomPage() {
                     <div className="room-info">
                         <div className="live-badge">LIVE</div>
                         <h1 className="room-name">{room.title}</h1>
+                        <div className="room-meta" style={{ display: 'flex', gap: '10px', alignItems: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                            <span title="Click to copy Room ID" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                onClick={() => { navigator.clipboard.writeText(room.id); alert('Room ID copied!'); }}>
+                                🆔 {room.id.slice(0, 8)}...
+                            </span>
+                            {room.type === 'private' && room.accessCode && (
+                                <span title="Click to copy Access Code" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '4px' }}
+                                    onClick={() => { navigator.clipboard.writeText(room.accessCode); alert('Access Code copied!'); }}>
+                                    🔑 {room.accessCode}
+                                </span>
+                            )}
+                        </div>
                         <div className="room-tags-row">
                             {room.tags.map(tag => (
                                 <span className="tag" key={tag}>#{tag}</span>

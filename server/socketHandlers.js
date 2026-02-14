@@ -41,6 +41,11 @@ function setupSocketHandlers(io) {
                     }
                 }
 
+                // If already in a different room, leave it first
+                if (currentRoomId && currentRoomId !== roomId) {
+                    handleLeaveRoom();
+                }
+
                 const room = roomManager.joinRoom(roomId, user);
                 currentRoomId = roomId;
                 socket.join(roomId);
@@ -102,7 +107,14 @@ function setupSocketHandlers(io) {
         });
 
         socket.on('room:find-by-code', ({ code }, callback) => {
-            const room = roomManager.getRoomByCode(code);
+            // Try to find by ID first
+            let room = roomManager.getRoom(code);
+            
+            // If not found by ID, try Access Code
+            if (!room) {
+                room = roomManager.getRoomByCode(code);
+            }
+
             if (!room) return callback({ success: false, error: 'Room not found' });
             callback({ success: true, roomId: room.id, title: room.title });
         });
@@ -173,21 +185,26 @@ function setupSocketHandlers(io) {
             io.to(currentRoomId).emit('mod:user-kicked', { userId });
 
             // Update list
-            io.to(currentRoomId).emit('room:participants-update', room.participants);
+            io.to(currentRoomId).emit('room:participants-update', { participants: room.participants });
         });
 
-        socket.on('mod:mute-all', () => {
-            const room = roomManager.getRoom(currentRoomId);
-            if (!room || room.hostId !== user.id) return;
+        socket.on('mod:mute-all', ({ roomId }) => {
+            const room = roomManager.getRoom(roomId);
+            if (!room || room.hostId !== user.id) {
+                console.log('Mute all denied:', { hasRoom: !!room, isHost: room?.hostId === user.id });
+                return;
+            }
 
-            const mutedUsers = roomManager.muteAllParticipants(currentRoomId, user.id);
+            const mutedUsers = roomManager.muteAllParticipants(roomId, user.id);
+            console.log('Muting users:', mutedUsers);
 
             // Notify each user they are muted (to force local mute)
             mutedUsers.forEach(uid => {
                 io.to(currentRoomId).emit('mod:user-muted', { userId: uid });
             });
 
-            io.to(currentRoomId).emit('room:participants-update', room.participants);
+            // Update list for everyone
+            io.to(currentRoomId).emit('room:participants-update', { participants: room.participants });
         });
 
         socket.on('mod:toggle-speakers', ({ allowed }) => {
@@ -196,6 +213,15 @@ function setupSocketHandlers(io) {
 
             roomManager.updateRoomSettings(currentRoomId, { speakersAllowed: allowed });
             io.to(currentRoomId).emit('room:settings-update', { speakersAllowed: allowed });
+
+            // If Stage Mode enabled (speakers NOT allowed), mute everyone except host
+            if (!allowed) {
+                const mutedUsers = roomManager.muteAllParticipants(currentRoomId, user.id);
+                mutedUsers.forEach(uid => {
+                    io.to(currentRoomId).emit('mod:user-muted', { userId: uid });
+                });
+                io.to(currentRoomId).emit('room:participants-update', { participants: room.participants });
+            }
         });
 
         // ─── Raise Hand ─────────────────────────────────────

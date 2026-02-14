@@ -18,16 +18,22 @@ export function useWebRTC(roomId, isInRoom) {
     // Get local audio stream
     const getLocalStream = useCallback(async () => {
         try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('MediaDevices API not available (requires HTTPS or localhost)');
+            }
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
             localStreamRef.current = stream;
             setLocalStream(stream);
             return stream;
         } catch (err) {
             console.error('Failed to get microphone:', err);
-            if (window.location.hostname !== 'localhost' && window.location.protocol === 'http:') {
-                setError('Microphone blocked! On LAN, Chrome requires HTTPS or a flag. Go to chrome://flags/#unsafely-treat-insecure-origin-as-secure, add this URL, enable, and relaunch.');
+            // Check if we are on a non-secure context (e.g. http://192.168.x.x)
+            if (window.location.protocol === 'http:' && 
+                window.location.hostname !== 'localhost' && 
+                window.location.hostname !== '127.0.0.1') {
+                setError('Microphone blocked! Browsers require HTTPS for microphone access on local network. Go to chrome://flags/#unsafely-treat-insecure-origin-as-secure to bypass this.');
             } else {
-                setError('Microphone access denied. Please allow microphone access.');
+                setError(`Microphone error: ${err.message}. Please allow access.`);
             }
             return null;
         }
@@ -188,5 +194,16 @@ export function useWebRTC(roomId, isInRoom) {
         }
     }, []);
 
-    return { remoteStreams, localStream, isMuted, toggleMute, forceMute, error };
+    // Forcibly unmute (called when host unmutes you - if we allow it)
+    const forceUnmute = useCallback(() => {
+        if (localStreamRef.current) {
+            const audioTrack = localStreamRef.current.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = true;
+                setIsMuted(false);
+            }
+        }
+    }, []);
+
+    return { remoteStreams, localStream, isMuted, toggleMute, forceMute, forceUnmute, error };
 }

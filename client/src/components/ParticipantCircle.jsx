@@ -34,7 +34,7 @@ export default function ParticipantCircle({ participant, isHost, isCurrentUser, 
             </span>
 
             {showHostControls && (
-                <div className="host-controls">
+                <div className="pc-host-controls">
                     <button
                         className="btn btn-ghost btn-icon-sm"
                         onClick={() => onMute(participant.id)}

@@ -86,8 +86,8 @@ export function useRoom(roomId) {
         socket.on('room:host-changed', onHostChanged);
         socket.on('room:ended', onRoomEnded);
         socket.on('chat:new-message', onNewMessage);
-        socket.on('mod:user-muted', onUserMuted);
-        socket.on('mod:user-unmuted', onUserUnmuted);
+        // socket.on('mod:user-muted', onUserMuted); // Handled by room:participants-update and RoomPage
+        // socket.on('mod:user-unmuted', onUserUnmuted);
         socket.on('mod:user-kicked', onUserKicked);
         socket.on('hand:raised', onHandRaised);
         socket.on('hand:lowered', onHandLowered);
@@ -100,8 +100,8 @@ export function useRoom(roomId) {
             socket.off('room:host-changed', onHostChanged);
             socket.off('room:ended', onRoomEnded);
             socket.off('chat:new-message', onNewMessage);
-            socket.off('mod:user-muted', onUserMuted);
-            socket.off('mod:user-unmuted', onUserUnmuted);
+            // socket.off('mod:user-muted', onUserMuted); // Removed to fix crash
+            // socket.off('mod:user-unmuted', onUserUnmuted); // Removed to fix crash
             socket.off('mod:user-kicked', onUserKicked);
             socket.off('hand:raised', onHandRaised);
             socket.off('hand:lowered', onHandLowered);

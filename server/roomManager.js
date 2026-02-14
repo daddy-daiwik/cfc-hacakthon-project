@@ -38,6 +38,12 @@ function joinRoom(roomId, user) {
     const room = rooms.get(roomId);
     if (!room) throw new Error('Room not found');
 
+    // Cancel auto-close if triggered
+    if (room.closeTimer) {
+        clearTimeout(room.closeTimer);
+        room.closeTimer = null;
+    }
+
     const existing = room.participants.find(p => p.id === user.id);
     if (existing) return room; // already in room
 
@@ -52,6 +58,13 @@ function joinRoom(roomId, user) {
         peerId: null,
     };
     room.participants.push(participant);
+
+    // If room was empty, first joiner becomes host again
+    if (room.participants.length === 1) {
+        room.hostId = user.id;
+        room.hostName = user.username;
+    }
+
     return room;
 }
 
@@ -63,15 +76,18 @@ function leaveRoom(roomId, userId) {
 
     // Auto-close if empty
     if (room.participants.length === 0) {
-        rooms.delete(roomId);
-        return { ...room, closed: true };
+        // Keep room alive for 30 seconds to handle refreshes/reconnects
+        room.closeTimer = setTimeout(() => {
+            if (rooms.has(roomId) && rooms.get(roomId).participants.length === 0) {
+                rooms.delete(roomId);
+                console.log(`🗑️ Room ${roomId} closed after timeout`);
+            }
+        }, 30000); // 30 seconds grace period
+
+        return { ...room, closed: false }; // Don't mark as closed yet
     }
 
-    // If host left, transfer to first remaining participant
-    if (room.hostId === userId && room.participants.length > 0) {
-        room.hostId = room.participants[0].id;
-        room.hostName = room.participants[0].name;
-    }
+
 
     return room;
 }

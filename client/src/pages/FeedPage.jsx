@@ -25,7 +25,11 @@ export default function FeedPage() {
         socket.emit('room:find-by-code', { code: joinCode.trim() }, ({ success, roomId, error }) => {
             setIsJoining(false);
             if (success) {
-                navigate(`/room/${roomId}`);
+                // Determine if user entered Access Code or Room ID
+                // If it looks like an access code (e.g. short, not UUID), pass it.
+                // Assuming access codes are shorter user-defined strings.
+                // Or simply pass the code query param if it matches what the server accepted.
+                navigate(`/room/${roomId}?code=${encodeURIComponent(joinCode.trim())}`);
             } else {
                 alert(error || 'Room not found');
             }
@@ -83,11 +87,26 @@ export default function FeedPage() {
     });
 
     const handleCreateRoom = async ({ title, tags, type, accessCode }) => {
+        if (!socket) {
+            alert('Not connected to server');
+            return;
+        }
         return new Promise((resolve) => {
-            socket.emit('room:create', { title, tags, type, accessCode }, ({ success, room }) => {
+            socket.emit('room:create', { title, tags, type, accessCode }, ({ success, room, error }) => {
                 if (success) {
                     setShowCreate(false);
+
+                    let msg = `🎉 Room Created!\n\n🆔 Room ID: ${room.id}`;
+                    if (room.type === 'private' && room.accessCode) {
+                        msg += `\n🔑 Access Code: ${room.accessCode}`;
+                        msg += `\n\n(Share this code with friends so they can join!)`;
+                    }
+                    alert(msg);
+
                     navigate(`/room/${room.id}`);
+                } else {
+                    console.error('Failed to create room:', error);
+                    alert(error || 'Failed to create room');
                 }
                 resolve();
             });
