@@ -1,51 +1,64 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 
-const SocketContext = createContext(null);
-const SERVER_URL = `http://${window.location.hostname}:3001`;
+const SocketContext = createContext();
 
 export function SocketProvider({ children }) {
-    const { token, logout } = useAuth();
+    const { token } = useAuth();
     const [socket, setSocket] = useState(null);
     const [connected, setConnected] = useState(false);
+    const socketRef = useRef(null);
+
+    // Get API URL from env or default to current hostname
+    const SERVER_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3001`;
 
     useEffect(() => {
         if (!token) {
-            if (socket) {
-                socket.disconnect();
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+                socketRef.current = null;
                 setSocket(null);
                 setConnected(false);
             }
             return;
         }
 
-        const s = io(SERVER_URL, {
+        if (socketRef.current) return;
+
+        const newSocket = io(SERVER_URL, {
             auth: { token },
             transports: ['websocket', 'polling'],
+            withCredentials: true,
         });
 
-        s.on('connect', () => {
-            console.log('🔌 Socket connected');
+        newSocket.on('connect', () => {
+            console.log('✅ Socket connected');
             setConnected(true);
         });
 
-        s.on('disconnect', () => {
-            console.log('🔌 Socket disconnected');
+        newSocket.on('disconnect', () => {
+            console.log('❌ Socket disconnected');
             setConnected(false);
         });
 
-        s.on('connect_error', (err) => {
-            console.error('Socket connection error:', err.message);
-            if (err.message === 'Invalid token' || err.message === 'Authentication required') {
-                logout();
-            }
+        newSocket.on('connect_error', (err) => {
+            console.error('Socket connection error:', err);
         });
 
-        setSocket(s);
+        socketRef.current = newSocket;
+        setSocket(newSocket);
 
         return () => {
-            s.disconnect();
+            // changing auth state or unmount shouldn't necessarily kill the socket immediately 
+            // unless we logged out. But here we depend on [token].
+            // If token changes, we disconnect and reconnect.
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+                socketRef.current = null;
+                setSocket(null);
+                setConnected(false);
+            }
         };
     }, [token]);
 
@@ -56,8 +69,8 @@ export function SocketProvider({ children }) {
     );
 }
 
-export function useSocket() {
+export const useSocket = () => {
     const ctx = useContext(SocketContext);
     if (!ctx) throw new Error('useSocket must be used within SocketProvider');
     return ctx;
-}
+};

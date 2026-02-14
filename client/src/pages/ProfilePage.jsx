@@ -27,7 +27,7 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
         setLoading(true);
         try {
-            const apiBase = `http://${window.location.hostname}:3001`;
+            const apiBase = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3001`;
             const res = await fetch(`${apiBase}/api/users/${username}`);
             if (!res.ok) throw new Error('User not found');
             const data = await res.json();
@@ -43,7 +43,7 @@ export default function ProfilePage() {
 
     const handleSave = async () => {
         try {
-            const apiBase = `http://${window.location.hostname}:3001`;
+            const apiBase = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3001`;
             const res = await fetch(`${apiBase}/api/users/profile`, {
                 method: 'PUT',
                 headers: {

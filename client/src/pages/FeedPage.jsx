@@ -51,7 +51,7 @@ export default function FeedPage() {
     // Fetch tags
     useEffect(() => {
         if (!connected) return;
-        const apiBase = `http://${window.location.hostname}:3001`;
+        const apiBase = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3001`;
         fetch(`${apiBase}/api/tags`)
             .then(r => r.json())
             .then(tags => setAllTags(tags))
