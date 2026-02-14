@@ -28,8 +28,11 @@ export function SocketProvider({ children }) {
 
         const newSocket = io(SERVER_URL, {
             auth: { token },
+            path: '/socket.io', // Explicitly match server config
             transports: ['websocket', 'polling'],
             withCredentials: true,
+            reconnection: true,
+            reconnectionAttempts: 5,
         });
 
         newSocket.on('connect', () => {
