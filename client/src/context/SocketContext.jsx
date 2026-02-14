@@ -11,7 +11,7 @@ export function SocketProvider({ children }) {
     const socketRef = useRef(null);
 
     // Get API URL from env or default to current hostname
-    const SERVER_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3001`;
+    const SERVER_URL = (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3001`).replace(/\/$/, '');
 
     useEffect(() => {
         if (!token) {

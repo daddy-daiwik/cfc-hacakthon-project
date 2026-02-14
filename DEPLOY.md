@@ -30,11 +30,10 @@ We recommend a **Split Deployment** (Frontend on Vercel, Backend on Render or Ra
 1.  Go to [Railway.app](https://railway.app) and login with GitHub.
 2.  Click **"New Project"** -> **"Deploy from GitHub repo"**.
 3.  Select your repo (`voiceroom-app`).
-4.  **Configure**:
-    *   Click on the new service card -> **Settings**.
-    *   **Root Directory**: `server`
-    *   **Build Command**: `npm install`
-    *   **Start Command**: `node index.js`
+4.  **Important**: The initial build will fail because Railway looks for code in the root folder.
+    *   Click on your service card -> **Settings**.
+    *   **Root Directory**: Change `/` to `/server`.
+    *   This will trigger a new deployment automatically.
 5.  **Variables**:
     *   Go to **Variables** tab.
     *   Add `MONGODB_URI` (your database URL).

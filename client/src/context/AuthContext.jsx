@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
-const SERVER_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3001`;
+const SERVER_URL = (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3001`).replace(/\/$/, '');
 const API_URL = `${SERVER_URL}/api`;
 const AuthContext = createContext(null);
 
