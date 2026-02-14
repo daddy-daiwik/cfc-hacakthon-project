@@ -17,7 +17,7 @@ export default function Navbar() {
         <nav className="navbar">
             <div className="navbar-container">
                 <Link to="/" className="navbar-logo">
-                    🎙️ CrowdControl
+                    🎙️ VoiceMyThoughts
                 </Link>
 
                 <div className="navbar-right">
