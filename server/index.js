@@ -73,6 +73,7 @@ app.get('/api/tags', (req, res) => {
 // ─── Socket.IO ──────────────────────────────────────────
 const io = new Server(server, {
     cors: corsOptions,
+    path: '/socket.io' // Explicitly set path
 });
 
 // Socket auth middleware
@@ -91,23 +92,22 @@ io.use((socket, next) => {
 
 setupSocketHandlers(io);
 
-// ─── Start Main Server ──────────────────────────────────
-const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-    console.log(`🎙️  VoiceRoom server running on http://localhost:${PORT}`);
-    console.log(`🔌 Socket.IO ready`);
-});
-
-// ─── Start PeerJS Server (Separate Port) ────────────────
-const peerApp = express();
-const peerServerHttp = http.createServer(peerApp);
-const peerServer = ExpressPeerServer(peerServerHttp, {
+// ─── PeerJS on Main Server ──────────────────────────────
+const peerServer = ExpressPeerServer(server, {
     debug: true,
     path: '/',
     allow_discovery: true,
 });
-peerApp.use(cors(corsOptions));
-peerApp.use('/peerjs', peerServer);
+
+app.use('/peerjs', peerServer);
+
+// ─── Start Main Server ──────────────────────────────────
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => {
+    console.log(`🎙️  VoiceRoom server running on http://localhost:${PORT}`);
+    console.log(`🔌 Socket.IO ready at /socket.io`);
+    console.log(`📡 PeerJS ready at /peerjs`);
+});
 
 // ─── Error Handling ─────────────────────────────────────
 process.on('uncaughtException', (err) => {
@@ -116,9 +116,4 @@ process.on('uncaughtException', (err) => {
 
 process.on('unhandledRejection', (reason, promise) => {
     console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-});
-
-const PEER_PORT = 3002;
-peerServerHttp.listen(PEER_PORT, () => {
-    console.log(`📡 PeerJS server running on http://localhost:${PEER_PORT}/peerjs`);
 });

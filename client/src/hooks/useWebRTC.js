@@ -28,8 +28,8 @@ export function useWebRTC(roomId, isInRoom) {
         } catch (err) {
             console.error('Failed to get microphone:', err);
             // Check if we are on a non-secure context (e.g. http://192.168.x.x)
-            if (window.location.protocol === 'http:' && 
-                window.location.hostname !== 'localhost' && 
+            if (window.location.protocol === 'http:' &&
+                window.location.hostname !== 'localhost' &&
                 window.location.hostname !== '127.0.0.1') {
                 setError('Microphone blocked! Browsers require HTTPS for microphone access on local network. Go to chrome://flags/#unsafely-treat-insecure-origin-as-secure to bypass this.');
             } else {
@@ -49,13 +49,32 @@ export function useWebRTC(roomId, isInRoom) {
             const stream = await getLocalStream();
             if (!stream || destroyed) return;
 
+            // Determine PeerJS configuration based on API URL
+            const SERVER_URL = (import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3001`).replace(/\/$/, '');
+
+            let peerConfig;
+            try {
+                const url = new URL(SERVER_URL);
+                const isSecure = url.protocol === 'https:';
+
+                peerConfig = {
+                    host: url.hostname,
+                    port: url.port ? parseInt(url.port) : (isSecure ? 443 : 80),
+                    path: '/peerjs',
+                    secure: isSecure,
+                    debug: 1,
+                };
+            } catch (e) {
+                console.error('Invalid API URL for PeerJS config, falling back to local defaults', e);
+                peerConfig = {
+                    host: window.location.hostname,
+                    port: 3001,
+                    path: '/peerjs',
+                };
+            }
+
             // Create PeerJS instance
-            const peer = new Peer(undefined, {
-                host: window.location.hostname,
-                port: 3002,
-                path: '/peerjs',
-                debug: 0,
-            });
+            const peer = new Peer(undefined, peerConfig);
 
             peerRef.current = peer;
 
